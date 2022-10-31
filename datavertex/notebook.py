@@ -1,11 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 import os
-from typing import Any, Iterable, TYPE_CHECKING, Optional
+from typing import Any, Iterable, TYPE_CHECKING, Optional, Union
 from ._datavertex import Flow, FlowProcessor, Resource, ResourceManager, ResourceProcessor, Workspace
 import pandas as pd
 import jsonlines
 import fnmatch
+import json
 
 @dataclass
 class Resources:
@@ -41,6 +42,7 @@ class Notebook:
             self.workspace.variables = workspace_json['variables']
             self.workspace.data_root_location = workspace_json['data_root_location']
             self.workspace.reports_root_location = workspace_json['reports_root_location']
+            self.workspace.id = workspace_json['id']
         else:
             print("Workspace not found. Using default.")
         #global __notebook
@@ -55,7 +57,7 @@ class Notebook:
 
     def add_inputs(self, resource_id_list: Iterable[str]):
         
-        print("Input Resources:")
+        print("Notebook Inputs:")
         for id in resource_id_list:
 
             matches = fnmatch.filter(self.resource_manager.resources.keys(), id)
@@ -64,11 +66,12 @@ class Notebook:
 
             for matched_id in matches:
                 self.inputs[matched_id] = self.resource_manager.resources[matched_id]
-                print(self.inputs[matched_id])
+                resource_processor = self.inputs[matched_id]
+                print(f"- {resource_processor.resource.name}")
         return
 
     def add_outputs(self, resource_id_list: Iterable[str]):
-        print("Output Resources:")
+        print("Notebook Outputs:")
         for id in resource_id_list:
 
             matches = fnmatch.filter(self.resource_manager.resources.keys(), id)
@@ -77,7 +80,8 @@ class Notebook:
 
             for matched_id in matches:
                 self.outputs[matched_id] = self.resource_manager.resources[matched_id]
-                print(self.outputs[matched_id])
+                resource_processor = self.outputs[matched_id]
+                print(f"- {resource_processor.resource.name}")
             # self.outputs[id] = self.resource_manager.resources[id]
             
         return
